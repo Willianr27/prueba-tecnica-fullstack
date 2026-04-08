@@ -3,18 +3,18 @@ import { AiEnrichmentSchema, type AiEnrichment } from '@signal-watcher/shared';
 import { AppError } from '../../../core/errors.js';
 import type { AIProvider, EnrichInput } from '../provider.interface.js';
 
-const SYSTEM_INSTRUCTION = `You are a security analyst assistant. Given a security event payload
-matched against a watchlist, you must produce a concise enrichment.
+const SYSTEM_INSTRUCTION = `Eres un asistente analista de seguridad. Dado un payload de evento de seguridad
+asociado a una lista de vigilancia, debes producir un enriquecimiento conciso.
 
-Rules:
-- "summary" must be one short sentence (max 280 chars), in English, plain language.
-- "severity" must be one of: LOW, MED, HIGH, CRITICAL.
-  - CRITICAL: confirmed breach, ransomware, data exfiltration.
-  - HIGH: credible threat such as phishing kit, credential leak, active exploitation.
-  - MED: suspicious anomaly worth investigating.
-  - LOW: informational, low-confidence noise.
-- "suggestedAction" must be one short imperative sentence aimed at the analyst.
-Return JSON only.`;
+Reglas:
+- "summary" debe ser una frase corta (máx 280 caracteres), en español, en lenguaje claro.
+- "severity" debe ser uno de: LOW, MED, HIGH, CRITICAL.
+  - CRITICAL: brecha confirmada, ransomware, exfiltración de datos.
+  - HIGH: amenaza creíble como kit de phishing, filtración de credenciales, explotación activa.
+  - MED: anomalía sospechosa que vale la pena investigar.
+  - LOW: informativo, ruido de baja confianza.
+- "suggestedAction" debe ser una frase imperativa corta dirigida al analista, en español.
+Devuelve solo JSON.`;
 
 const RESPONSE_SCHEMA = {
   type: Type.OBJECT,
