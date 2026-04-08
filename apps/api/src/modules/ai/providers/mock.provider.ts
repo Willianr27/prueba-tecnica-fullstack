@@ -5,17 +5,17 @@ const RULES: Array<{ keywords: string[]; severity: Severity; action: string }> =
   {
     keywords: ['ransomware', 'malware', 'breach', 'leak', 'exfiltration'],
     severity: 'CRITICAL',
-    action: 'Escalate to incident response team immediately and isolate affected assets.',
+    action: 'Escalar al equipo de respuesta a incidentes inmediatamente y aislar los activos afectados.',
   },
   {
     keywords: ['phishing', 'credential', 'spoof', 'impersonation', 'typosquat'],
     severity: 'HIGH',
-    action: 'Notify the security team and request takedown of the offending domain.',
+    action: 'Notificar al equipo de seguridad y solicitar la baja del dominio infractor.',
   },
   {
     keywords: ['suspicious', 'anomaly', 'unusual', 'spike'],
     severity: 'MED',
-    action: 'Open a ticket for triage and continue monitoring for additional signals.',
+    action: 'Abrir un ticket para triage y continuar monitoreando por señales adicionales.',
   },
 ];
 
@@ -35,11 +35,11 @@ export class MockProvider implements AIProvider {
 
     const severity: Severity = match?.severity ?? 'LOW';
     const action =
-      match?.action ?? 'No immediate action required; keep the event for trend analysis.';
+      match?.action ?? 'Sin acción inmediata requerida; conservar el evento para análisis de tendencias.';
 
     const eventTypeRaw = input.rawPayload.type;
     const eventType = typeof eventTypeRaw === 'string' ? eventTypeRaw : 'event';
-    const summary = `New ${eventType} detected for watchlist "${input.watchlistName}" — severity ${severity}.`;
+    const summary = `Nuevo evento ${eventType} detectado para la lista "${input.watchlistName}" — severidad ${severity}.`;
 
     return { summary, severity, suggestedAction: action };
   }

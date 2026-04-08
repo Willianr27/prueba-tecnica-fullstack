@@ -4,6 +4,10 @@ Monitor de listas de vigilancia con IA. Un analista crea **watchlists** (listas 
 
 Construido como prueba técnica enfocada en arquitectura, observabilidad e integración real (no de juguete) con IA.
 
+| Listado de watchlists | Detalle con eventos enriquecidos |
+|---|---|
+| ![Listado](./docs/screenshots/01-listado-watchlists.png) | ![Detalle](./docs/screenshots/02-detalle-eventos.png) |
+
 ---
 
 ## Tabla de contenidos
@@ -299,18 +303,36 @@ CI corre lo mismo en GitHub Actions con servicios Postgres + Redis reales.
 
 ## Despliegue
 
-### Frontend — Vercel
-1. Importa el repo en Vercel.
-2. Root directory: `apps/web`.
-3. Variable: `API_BASE_URL=https://<tu-backend>`.
-4. Deploy.
+### Backend — Railway (recomendado)
 
-### Backend — Railway / Render / Fly
-1. Apunta el servicio al `apps/api/Dockerfile` (multi-stage, usuario no-root).
-2. Adjunta addons de Postgres y Redis.
-3. Variables: `DATABASE_URL`, `REDIS_URL`, `AI_PROVIDER`, `GEMINI_API_KEY`, `CORS_ORIGINS`.
-4. Comando de arranque: `node --env-file=.env dist/server.js` (o deja que el Dockerfile lo haga).
-5. Antes del primer arranque: `pnpm --filter @signal-watcher/api run prisma:deploy`.
+1. Crea un proyecto nuevo en Railway → **Deploy from GitHub repo** → selecciona este repo.
+2. En *Settings*:
+   - **Root directory**: déjalo en blanco (la raíz del monorepo).
+   - **Dockerfile path**: `apps/api/Dockerfile`.
+   - **Build context**: `.` (raíz del repo).
+3. Añade dos plugins: **PostgreSQL** y **Redis**.
+4. Variables de entorno del servicio api:
+   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (referencia automática)
+   - `REDIS_URL` = `${{Redis.REDIS_URL}}`
+   - `AI_PROVIDER` = `gemini` (o `mock` para arrancar sin clave)
+   - `GEMINI_API_KEY` = tu clave (obtén una en https://aistudio.google.com/apikey)
+   - `GEMINI_MODEL` = `gemini-2.5-flash`
+   - `CORS_ORIGINS` = la URL pública de tu frontend en Vercel
+   - `PORT` = `3001`
+5. Deploy. El `CMD` del Dockerfile aplica las migraciones automáticamente al arrancar (`prisma migrate deploy`).
+6. Verifica con `curl https://<tu-api>.up.railway.app/health` — debe devolver `{"status":"ok"}`.
+
+> El Dockerfile usa `pnpm deploy` para crear un bundle standalone, instala `openssl` para los engines de Prisma, y declara `linux-musl-openssl-3.0.x` como binary target. Verificado localmente con `docker build -f apps/api/Dockerfile -t signal-watcher-api .`.
+
+### Frontend — Vercel
+
+1. **New Project** → importa el repo.
+2. **Root directory**: `apps/web`.
+3. **Framework preset**: Next.js (auto-detectado).
+4. Variables de entorno:
+   - `API_BASE_URL` = la URL pública del backend en Railway
+5. Deploy.
+6. Vuelve a Railway y agrega la URL final de Vercel a `CORS_ORIGINS`.
 
 Más detalle operacional en [`docs/RUNBOOK.md`](./docs/RUNBOOK.md).
 

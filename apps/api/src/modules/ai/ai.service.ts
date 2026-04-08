@@ -78,9 +78,9 @@ export class AiService {
     // 3) Graceful degradation: return a low-severity stub instead of throwing
     logger.error({ err: lastErr }, 'AI enrichment failed after retries — using fallback');
     return {
-      summary: 'AI enrichment unavailable; raw event stored for later analysis.',
+      summary: 'Enriquecimiento de IA no disponible; evento crudo almacenado para análisis posterior.',
       severity: 'LOW',
-      suggestedAction: 'Retry enrichment manually or review the raw payload.',
+      suggestedAction: 'Reintentar el enriquecimiento manualmente o revisar el payload crudo.',
       provider: `${this.provider.name}-fallback`,
       latencyMs,
       cached: false,

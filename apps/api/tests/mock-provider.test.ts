@@ -12,6 +12,7 @@ describe('MockProvider', () => {
     });
     expect(result.severity).toBe('CRITICAL');
     expect(result.summary).toMatch(/ransomware_listing/);
+    expect(result.summary).toMatch(/severidad/);
     expect(result.suggestedAction.length).toBeGreaterThan(0);
   });
 
