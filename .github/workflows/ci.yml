@@ -54,10 +54,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @signal-watcher/api prisma generate
+        run: pnpm --filter @signal-watcher/api run prisma:generate
 
       - name: Apply migrations
-        run: pnpm --filter @signal-watcher/api prisma migrate deploy
+        run: pnpm --filter @signal-watcher/api run prisma:deploy
 
       - run: pnpm typecheck
       - run: pnpm test
