@@ -15,7 +15,7 @@ const ConfigSchema = z.object({
 
   AI_PROVIDER: z.enum(['gemini', 'mock']).default('mock'),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-flash-latest'),
+  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
   AI_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(600),
 });
 
