@@ -53,6 +53,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build shared package
+        run: pnpm run build:shared
+
       - name: Generate Prisma client
         run: pnpm --filter @signal-watcher/api run prisma:generate
 

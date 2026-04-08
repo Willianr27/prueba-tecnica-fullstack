@@ -8,10 +8,11 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
-    "build": "pnpm -r --filter \"./apps/*\" build",
+    "build": "pnpm -r build",
+    "build:shared": "pnpm --filter @signal-watcher/shared build",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
+    "typecheck": "pnpm run build:shared && pnpm -r typecheck",
+    "test": "pnpm run build:shared && pnpm -r test",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
   },
   "devDependencies": {
