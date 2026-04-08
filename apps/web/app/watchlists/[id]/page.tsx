@@ -46,7 +46,7 @@ export default async function WatchlistDetailPage({
       <div className="flex items-center justify-between">
         <div>
           <Link href="/watchlists" className="text-xs text-white/50 hover:text-white">
-            ← Back to watchlists
+            ← Volver a las listas
           </Link>
           <h1 className="mt-1 text-2xl font-semibold">{watchlist.name}</h1>
           <div className="mt-2 flex flex-wrap gap-1">
@@ -62,11 +62,11 @@ export default async function WatchlistDetailPage({
 
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-          Events ({watchlist.events.length})
+          Eventos ({watchlist.events.length})
         </h2>
         {watchlist.events.length === 0 ? (
           <p className="rounded-md border border-white/10 bg-white/5 p-4 text-sm text-white/60">
-            No events yet. Click <em>Simulate event</em> to generate one.
+            Aún no hay eventos. Haz clic en <em>Simular evento</em> para generar uno.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -80,7 +80,7 @@ export default async function WatchlistDetailPage({
                         {new Date(e.createdAt).toLocaleString()}
                       </span>
                       <span className="text-xs text-white/40">
-                        {e.aiProvider ?? 'unknown'}
+                        {e.aiProvider ?? 'desconocido'}
                         {e.aiLatencyMs != null ? ` · ${e.aiLatencyMs}ms` : ''}
                       </span>
                     </div>

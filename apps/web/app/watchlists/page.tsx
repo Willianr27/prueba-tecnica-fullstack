@@ -18,10 +18,10 @@ export default async function WatchlistsPage() {
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_320px]">
       <section>
-        <h1 className="mb-4 text-xl font-semibold">Watchlists</h1>
+        <h1 className="mb-4 text-xl font-semibold">Listas de vigilancia</h1>
         {watchlists.length === 0 ? (
           <p className="rounded-md border border-white/10 bg-white/5 p-4 text-sm text-white/60">
-            No watchlists yet. Create your first one →
+            Aún no hay listas. Crea la primera →
           </p>
         ) : (
           <ul className="space-y-2">
@@ -34,7 +34,7 @@ export default async function WatchlistsPage() {
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{w.name}</span>
                     <span className="text-xs text-white/50">
-                      {w._count?.events ?? 0} events
+                      {w._count?.events ?? 0} eventos
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1">

@@ -12,7 +12,7 @@ export function SimulateEventButton({ watchlistId }: { watchlistId: string }) {
       disabled={pending}
       className="rounded-md bg-cyan-500 px-3 py-1.5 text-sm font-medium text-black hover:bg-cyan-400 disabled:opacity-50"
     >
-      {pending ? 'Simulating…' : 'Simulate event'}
+      {pending ? 'Simulando…' : 'Simular evento'}
     </button>
   );
 }

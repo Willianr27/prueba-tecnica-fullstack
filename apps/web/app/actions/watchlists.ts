@@ -28,11 +28,11 @@ export async function createWatchlistAction(
   try {
     await apiFetch('/api/watchlists', { method: 'POST', body: parsed.data });
     revalidatePath('/watchlists');
-    return { ok: true, message: 'Watchlist created.' };
+    return { ok: true, message: 'Lista creada.' };
   } catch (err) {
     return {
       ok: false,
-      message: err instanceof ApiClientError ? err.message : 'Failed to create watchlist',
+      message: err instanceof ApiClientError ? err.message : 'No se pudo crear la lista',
     };
   }
 }
