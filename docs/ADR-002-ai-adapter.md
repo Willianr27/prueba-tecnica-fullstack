@@ -1,19 +1,19 @@
-# ADR-002 — AI provider adapter, mock mode and caching
+# ADR-002 — Adaptador de proveedor IA, modo mock y caché
 
-## Status
-Accepted.
+## Estado
+Aceptado.
 
-## Context
-The product enriches each simulated event with an LLM call (summary, severity classification, suggested action). We need this to be:
-1. Testable without an API key.
-2. Cheap and fast on repeated identical events.
-3. Resilient — a flaky LLM should not break the product.
-4. Easy to swap providers later (Gemini → OpenAI/Anthropic/Azure).
+## Contexto
+El producto enriquece cada evento simulado con una llamada a un LLM (resumen, clasificación de severidad, acción sugerida). Necesitamos que esto sea:
+1. Testeable sin API key.
+2. Barato y rápido en eventos repetidos.
+3. Resiliente — un LLM intermitente no debe romper el producto.
+4. Fácil de cambiar de proveedor en el futuro (Gemini → OpenAI/Anthropic/Azure).
 
-## Decision
+## Decisión
 
-### Adapter pattern
-A single interface lives in `apps/api/src/modules/ai/provider.interface.ts`:
+### Patrón adapter
+Una sola interfaz vive en `apps/api/src/modules/ai/provider.interface.ts`:
 
 ```ts
 interface AIProvider {
@@ -22,26 +22,26 @@ interface AIProvider {
 }
 ```
 
-Two implementations:
-- **`GeminiProvider`** — uses `@google/genai` with `responseMimeType: "application/json"` and a `responseSchema` so Gemini is forced to return a structured object that matches our Zod `AiEnrichmentSchema`. Output is re-validated with Zod after parsing — we never trust the LLM to be well-formed.
-- **`MockProvider`** — deterministic keyword-based classifier (`ransomware → CRITICAL`, `phishing → HIGH`, …). Used by default in tests and when no API key is available.
+Dos implementaciones:
+- **`GeminiProvider`** — usa `@google/genai` con `responseMimeType: "application/json"` y un `responseSchema`, así Gemini está obligado a devolver un objeto estructurado que matchea nuestro `AiEnrichmentSchema` de Zod. La salida se **revalida con Zod** después de parsear — nunca confiamos en que el LLM venga bien formado.
+- **`MockProvider`** — clasificador determinista por palabras clave (`ransomware → CRITICAL`, `phishing → HIGH`, …). Se usa por defecto en tests y cuando no hay API key disponible.
 
-A factory in `ai.service.ts` picks the implementation based on `AI_PROVIDER` (`gemini` | `mock`).
+Un factory en `ai.service.ts` elige la implementación según `AI_PROVIDER` (`gemini` | `mock`).
 
-### Caching
-The `AiService` wraps the provider with a Redis cache:
-- Cache key = `sha256` of `{ watchlist name, sorted terms, raw payload, provider name }`.
-- TTL configurable via `AI_CACHE_TTL_SECONDS` (default 600s).
-- Cache hits increment `ai_cache_hits_total` and short-circuit the provider call entirely.
-- Cache writes are fire-and-forget — a Redis hiccup never blocks a request.
+### Caché
+El `AiService` envuelve al provider con una caché Redis:
+- Cache key = `sha256` de `{ nombre de la watchlist, términos ordenados, raw payload, nombre del provider }`.
+- TTL configurable vía `AI_CACHE_TTL_SECONDS` (default 600s).
+- Los hits incrementan `ai_cache_hits_total` y cortocircuitan la llamada al provider entera.
+- Las escrituras a la caché son fire-and-forget — un hipo de Redis nunca bloquea una request.
 
-### Resilience
-- 1 retry with linear backoff on provider errors.
-- 15-second per-call timeout via `AbortController`.
-- **Graceful degradation**: if the provider fails after retries, the service still returns a result — `severity: 'LOW'`, a stub summary, a "retry manually" suggestion — so the event is persisted and the UI keeps working. This is logged at `error` level and counted in `ai_calls_total{outcome="failure"}`.
+### Resiliencia
+- 1 reintento con backoff lineal en errores del provider.
+- Timeout por llamada de 15 segundos vía `Promise.race`.
+- **Degradación elegante**: si el provider falla tras los reintentos, el servicio aún devuelve un resultado — `severity: 'LOW'`, un summary stub y una sugerencia de "reintentar manualmente" — para que el evento se persista y la UI siga funcionando. Esto se loguea a nivel `error` y se cuenta en `ai_calls_total{outcome="failure"}`.
 
-## Consequences
-- Adding a new provider = one file implementing the interface + a switch case in the factory.
-- The Mock provider doubles as a deterministic test fixture, removing any need to mock fetch.
-- Severity classifications can drift if Gemini changes behaviour, but the Zod schema guarantees the shape stays valid.
-- Cache key includes the provider name so swapping providers naturally invalidates old entries.
+## Consecuencias
+- Agregar un proveedor nuevo = un archivo que implemente la interfaz + un `case` en el factory.
+- El `MockProvider` hace doble función como fixture determinista para tests, eliminando la necesidad de mockear `fetch`.
+- Las clasificaciones de severidad pueden derivar si Gemini cambia su comportamiento, pero el schema Zod garantiza que la forma siga siendo válida.
+- La cache key incluye el nombre del provider, así que cambiar de proveedor invalida naturalmente las entradas viejas.
