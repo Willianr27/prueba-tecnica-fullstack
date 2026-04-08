@@ -1,0 +1,38 @@
+# deps
+node_modules
+.pnpm-store
+
+# build
+dist
+build
+.next
+out
+*.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# test/coverage
+coverage
+.nyc_output
+
+# misc
+.cache
+.turbo

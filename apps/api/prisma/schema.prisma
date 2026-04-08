@@ -1,0 +1,41 @@
+// Prisma schema for Signal Watcher
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  name      String
+  terms     String[]
+  createdAt DateTime @default(now())
+  events    Event[]
+
+  @@index([createdAt])
+}
+
+model Event {
+  id              String    @id @default(cuid())
+  watchlistId     String
+  watchlist       Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  rawPayload      Json
+  summary         String?
+  severity        Severity?
+  suggestedAction String?
+  aiProvider      String?
+  aiLatencyMs     Int?
+  createdAt       DateTime  @default(now())
+
+  @@index([watchlistId, createdAt])
+}
+
+enum Severity {
+  LOW
+  MED
+  HIGH
+  CRITICAL
+}
