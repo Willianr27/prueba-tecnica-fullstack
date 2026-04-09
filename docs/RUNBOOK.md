@@ -78,7 +78,7 @@ curl -H 'x-correlation-id: debug-123' http://localhost:3001/api/watchlists
 | El API muere al arranque con "Invalid environment configuration" | Variable faltante o mal escrita | Compará `.env` contra `.env.example` |
 | `/health` devuelve `degraded` con `database:false` | Postgres inalcanzable | `docker compose ps`, verificá `DATABASE_URL` y el puerto 5433 |
 | `/health` devuelve `degraded` con `cache:false` | Redis inalcanzable | `docker exec signal-watcher-redis redis-cli ping`, verificá `REDIS_URL` y el puerto 6380 |
-| Todos los eventos vuelven con severidad `LOW` y "AI enrichment unavailable" | Gemini fallando tras reintentos | Mirá `ai_calls_total{outcome="failure"}`, verificá API key y cuota |
+| Todos los eventos vuelven con severidad `LOW` y "Enriquecimiento de IA no disponible" | Gemini fallando tras reintentos | Mirá `ai_calls_total{outcome="failure"}`, verificá API key y cuota |
 | El frontend muestra "Failed to fetch" | `API_BASE_URL` mal o CORS mal configurado | Actualizá las env vars, asegurate de que `CORS_ORIGINS` incluya el host del frontend |
 | Rate limited (429) | Más de 100 req/min desde una IP | Ajustá la configuración de `@fastify/rate-limit` en `apps/api/src/app.ts` |
 | `prisma migrate` falla con "P1001 can't reach database" | Postgres no levantado o conflicto de puerto | `docker compose up -d`, comprobá que `DATABASE_URL` use puerto 5433 |

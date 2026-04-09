@@ -4,9 +4,17 @@ Monitor de listas de vigilancia con IA. Un analista crea **watchlists** (listas 
 
 Construido como prueba técnica enfocada en arquitectura, observabilidad e integración real (no de juguete) con IA.
 
-| Listado de watchlists | Detalle con eventos enriquecidos |
-|---|---|
-| ![Listado](./docs/screenshots/01-listado-watchlists.png) | ![Detalle](./docs/screenshots/02-detalle-eventos.png) |
+### Dashboard — listado con stats y watchlist cards
+
+![Dashboard con stats bar, watchlist cards, header y footer](./docs/screenshots/01-listado-watchlists.png)
+
+Incluye: header sticky con indicador *Operativo*, barra de stats (eventos totales, críticos, listas activas, proveedor IA), watchlist cards en grid con chips de términos y mini-barra de severidad, y footer con stack y enlaces a documentación.
+
+### Detalle — eventos enriquecidos por IA
+
+![Detalle de watchlist con event cards: resumen IA, acción sugerida y metadata](./docs/screenshots/02-detalle-eventos.png)
+
+Cada event card separa visualmente: **badge de severidad** + tipo de evento + timestamp relativo, **resumen de IA** con borde izquierdo coloreado por severidad, **acción sugerida** en un bloque destacado, y **metadata** (proveedor con dot verde si es Gemini, latencia, caché).
 
 ---
 
@@ -80,7 +88,7 @@ Toda la enriquecimiento queda persistido en Postgres junto con el payload origin
 
 | Provider | Cuándo se usa | Comportamiento |
 |---|---|---|
-| `GeminiProvider` | `AI_PROVIDER=gemini` con `GEMINI_API_KEY` | Llama a `gemini-flash-latest` con structured output |
+| `GeminiProvider` | `AI_PROVIDER=gemini` con `GEMINI_API_KEY` | Llama a `gemini-2.5-flash` con structured output y system prompt en español |
 | `MockProvider` | `AI_PROVIDER=mock` (default en tests/dev) | Clasificador determinista por palabras clave (`ransomware → CRITICAL`, `phishing → HIGH`, …) |
 
 Agregar OpenAI/Anthropic/Azure es **un archivo nuevo** que implemente la interfaz + un `case` en el factory. Detalles en [`docs/ADR-002-ai-adapter.md`](./docs/ADR-002-ai-adapter.md).
@@ -88,6 +96,22 @@ Agregar OpenAI/Anthropic/Azure es **un archivo nuevo** que implemente la interfa
 ### Schemas compartidos
 
 `packages/shared` contiene los schemas Zod (`WatchlistSchema`, `EventSchema`, `AiEnrichmentSchema`, …) que **ambos** lados consumen. Es la única forma en que tipos cruzan la frontera front ↔ back; nunca se exportan tipos de Prisma al frontend.
+
+### Frontend (Next.js 15)
+
+El web es un App Router puro, con **Server Components** por defecto y **Server Actions** para todas las mutaciones. Componentes destacados:
+
+- `components/layout/SiteHeader.tsx` — header sticky con logo, navegación activa e indicador *Operativo*.
+- `components/layout/SiteFooter.tsx` — footer con stack, enlaces a documentación y copyright.
+- `components/dashboard/StatsBar.tsx` — 4 metric cards alimentadas por `GET /api/stats`.
+- `components/watchlists/WatchlistCard.tsx` — tarjeta con términos como chips y mini-barra de severidad computada desde `severityCounts`.
+- `components/watchlists/NewWatchlistButton.tsx` + `components/ui/Dialog.tsx` — botón que abre un modal (backdrop, ESC, scroll lock) con `WatchlistForm` dentro.
+- `components/events/EventCard.tsx` — tarjeta de evento con header, sección IA con borde por severidad, acción sugerida y metadata con dot verde/gris por proveedor.
+- `components/ui/EmptyState.tsx` — estado vacío reutilizable con icono SVG, título, descripción y CTA opcional.
+- `components/ui/RelativeTime.tsx` — timestamps relativos con `date-fns/es` y tooltip con la fecha absoluta.
+- `components/SimulateEventButton.tsx` — dispara la Server Action y muestra un toast con la severidad devuelta.
+
+**Feedback inmediato**: `sonner` maneja los toasts (creación, simulación, errores) con tema dark y posición bottom-right.
 
 ### Observabilidad de primer día
 
@@ -105,7 +129,7 @@ Agregar OpenAI/Anthropic/Azure es **un archivo nuevo** que implemente la interfa
 | Persistencia | **PostgreSQL 16** + Prisma ORM |
 | Caché | **Redis 7** (con fallback en memoria si `REDIS_URL` no está definida) |
 | IA | **Google Gemini** (`gemini-flash-latest`) vía `@google/genai`, con `MockProvider` determinista para tests/dev |
-| Frontend | **Next.js 15** App Router · Server Actions · Tailwind CSS |
+| Frontend | **Next.js 15** App Router · Server Actions · Tailwind CSS · Sonner (toasts) · date-fns |
 | Tests | Vitest |
 | CI | GitHub Actions (typecheck · test · build, con servicios Postgres + Redis) |
 | Despliegue | Vercel (frontend) · Railway / Render (backend Docker) |
@@ -187,27 +211,42 @@ URLs:
 
 ## Guía de uso
 
-### 1. Crear una watchlist
+### 1. Dashboard
 
-Abre http://localhost:3000. Verás un formulario con dos campos:
+Abre http://localhost:3000/watchlists. Arriba de todo ves una **barra de stats** con 4 métricas leídas de `GET /api/stats`:
+
+- **Eventos totales** — conteo global de eventos en todas las listas.
+- **Críticos** — conteo de `severity=CRITICAL` (en rojo si hay alguno).
+- **Listas activas** — número de watchlists.
+- **Proveedor IA** — `Gemini` o `Mock` según el backend (en verde).
+
+### 2. Crear una watchlist
+
+Haz clic en el botón **"+ Nueva lista"** del header de la sección. Se abre un **dialog modal** con dos campos:
 
 - **Nombre**: identificador legible (ej. `Marca ACME`).
-- **Términos**: lista separada por comas (ej. `acme.com, acme-corp, ransomware-acme`).
+- **Términos**: uno por línea o separados por comas (ej. `acme.com, acme-corp, ransomware-acme`).
 
-Al enviar, una Server Action de Next.js llama al backend y crea la watchlist en Postgres. La página se revalida automáticamente y la verás listada.
+Al enviar, una Server Action llama al backend, crea la watchlist en Postgres y muestra un **toast de confirmación**. La página se revalida y el dialog se cierra automáticamente al tener éxito. Si no hay ninguna lista aún, en lugar del listado verás un **empty state** con un CTA para crear la primera.
 
-### 2. Ver el detalle
+### 3. Ver el detalle de una lista
 
-Haz clic en una watchlist. La página de detalle muestra:
-- Sus términos.
-- Los últimos 50 eventos asociados, con su severidad coloreada (`LOW` gris, `MED` amarillo, `HIGH` naranja, `CRITICAL` rojo).
-- Para cada evento: el resumen del LLM, la acción sugerida, el proveedor (`gemini` / `mock`) y la latencia.
+Haz clic en una **watchlist card**. Las cards muestran el nombre, los términos como chips, el conteo de eventos y una mini-barra de severidad con un cuadradito por cada severidad presente (rojo `CRITICAL`, naranja `HIGH`, amarillo `MED`, verde `LOW`). Si la lista tiene críticos, un badge `N críticos` lo avisa en el header de la card.
 
-### 3. Simular un evento
+La página de detalle muestra los últimos 50 eventos como **event cards** con cuatro zonas visualmente separadas:
 
-Botón **"Simular evento"** en la página de detalle. El backend genera un payload sintético, lo manda a la IA y persiste el resultado. Si el evento contiene la palabra `ransomware` o `phishing`, el `MockProvider` lo clasificará como `CRITICAL` o `HIGH` respectivamente — útil para demos sin Gemini.
+- **Header** — badge de severidad coloreado, tipo de evento (`malware_mention`, `social_chatter`, …) y timestamp relativo (`hace 2 min`, con la fecha absoluta en el tooltip).
+- **Resumen de IA** — el texto del LLM con un borde izquierdo coloreado por severidad.
+- **Acción sugerida** — en un bloque destacado con fondo sutil.
+- **Metadata** — proveedor (con dot verde si es Gemini, gris si es Mock), latencia en ms y estado de caché, separados por `·`.
 
-### 4. Ver métricas
+### 4. Simular un evento
+
+Botón **"+ Simular evento"** (outline) arriba a la derecha. El backend genera un payload sintético, lo manda a la IA y persiste el resultado. Al recibir la respuesta, aparece un **toast** con la severidad y un preview del resumen. Si el evento contiene la palabra `ransomware` o `phishing`, el `MockProvider` lo clasificará como `CRITICAL` o `HIGH` respectivamente — útil para demos sin Gemini.
+
+Si la lista todavía no tiene eventos, verás un **empty state** con un CTA "+ Simular evento" directamente en el panel vacío.
+
+### 5. Ver métricas
 
 ```bash
 curl http://localhost:3001/metrics
@@ -219,7 +258,7 @@ Busca estos contadores:
 - `ai_cache_hits_total` — eventos servidos desde caché
 - `ai_call_duration_seconds_bucket` — histograma de latencia
 
-### 5. Cambiar de proveedor en caliente
+### 6. Cambiar de proveedor en caliente
 
 Edita `apps/api/.env`:
 ```env
@@ -227,7 +266,7 @@ AI_PROVIDER=mock     # o gemini
 ```
 Reinicia el api (`tsx watch` se recargará solo si cambias código, pero las env vars requieren reinicio del proceso).
 
-### 6. Trazar una request de punta a punta
+### 7. Trazar una request de punta a punta
 
 Cada respuesta del backend incluye `x-correlation-id`. Pasa el tuyo para forzar un valor:
 
@@ -249,7 +288,7 @@ Todas las variables se validan con Zod en el arranque (`apps/api/src/core/config
 | `REDIS_URL` | ⚠️ | Opcional. Si no está, usa caché en memoria. Local: `redis://localhost:6380` |
 | `AI_PROVIDER` | ✅ | `gemini` o `mock` |
 | `GEMINI_API_KEY` | si `AI_PROVIDER=gemini` | Obtén una en https://aistudio.google.com/apikey |
-| `GEMINI_MODEL` | – | Por defecto `gemini-flash-latest` |
+| `GEMINI_MODEL` | – | Por defecto `gemini-2.5-flash` |
 | `AI_CACHE_TTL_SECONDS` | – | Por defecto `600` |
 | `CORS_ORIGINS` | – | Lista separada por comas |
 | `LOG_LEVEL` | – | `fatal` / `error` / `warn` / `info` / `debug` / `trace` |
@@ -262,8 +301,9 @@ Todas las variables se validan con Zod en el arranque (`apps/api/src/core/config
 | Método | Ruta | Descripción |
 |---|---|---|
 | `POST` | `/api/watchlists` | Crear `{ name, terms[] }` |
-| `GET` | `/api/watchlists` | Listar todas |
+| `GET` | `/api/watchlists` | Listar todas (incluye `severityCounts` por lista) |
 | `GET` | `/api/watchlists/:id` | Detalle + últimos 50 eventos |
+| `GET` | `/api/stats` | Agregados globales para el dashboard (`totalEvents`, `criticalCount`, `watchlistCount`, `aiProvider`, …) |
 | `DELETE` | `/api/watchlists/:id` | Eliminar |
 | `POST` | `/api/watchlists/:id/events/simulate` | Generar evento sintético → enriquecer con IA → persistir |
 | `GET` | `/api/events?watchlistId=` | Listar eventos de una watchlist |
