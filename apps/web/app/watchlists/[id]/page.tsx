@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Severity } from '@signal-watcher/shared';
 import { ApiClientError, apiFetch } from '@/lib/api-client';
 import { SimulateEventButton } from '@/components/SimulateEventButton';
 import { EventCard } from '@/components/events/EventCard';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { BackLink } from '@/components/ui/BackLink';
 
 interface EventRow {
   id: string;
@@ -46,10 +46,8 @@ export default async function WatchlistDetailPage({
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/watchlists" className="text-xs text-white/50 hover:text-white">
-            ← Volver a las listas
-          </Link>
-          <h1 className="mt-1 text-2xl font-semibold">{watchlist.name}</h1>
+          <BackLink href="/watchlists" label="Volver a las listas" />
+          <h1 className="mt-3 text-2xl font-semibold">{watchlist.name}</h1>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {watchlist.terms.map((t) => (
               <span
