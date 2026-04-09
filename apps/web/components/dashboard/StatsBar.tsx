@@ -46,7 +46,7 @@ function StatCard({
 
   return (
     <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-      <div className="text-[11px] uppercase tracking-wide text-white/50">{label}</div>
+      <div className="text-xs text-white/60">{label}</div>
       <div className={`mt-1 text-2xl font-semibold ${valueColor}`}>{value}</div>
     </div>
   );

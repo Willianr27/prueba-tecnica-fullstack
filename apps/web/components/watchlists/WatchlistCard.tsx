@@ -35,7 +35,7 @@ export function WatchlistCard({
       <div className="mb-2 flex items-start justify-between gap-3">
         <h3 className="text-sm font-medium text-white">{name}</h3>
         {critical > 0 && (
-          <span className="shrink-0 rounded-full border border-red-500/30 bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-300">
+          <span className="shrink-0 rounded-full border border-red-500/30 bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-300">
             {critical} crítico{critical === 1 ? '' : 's'}
           </span>
         )}

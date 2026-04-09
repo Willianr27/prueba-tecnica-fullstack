@@ -65,7 +65,7 @@ export default async function WatchlistDetailPage({
       </div>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/60">
+        <h2 className="mb-3 text-sm font-medium text-white/80">
           Eventos ({watchlist.events.length})
         </h2>
         {watchlist.events.length === 0 ? (

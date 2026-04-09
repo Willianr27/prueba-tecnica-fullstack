@@ -32,9 +32,9 @@ export function SimulateEventButton({ watchlistId }: { watchlistId: string }) {
       type="button"
       onClick={handleClick}
       disabled={pending}
-      className="rounded-md bg-cyan-500 px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-cyan-400 disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-transparent px-3 py-1.5 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:bg-white/5 hover:text-white disabled:opacity-50"
     >
-      {pending ? 'Simulando…' : 'Simular evento'}
+      {pending ? 'Simulando…' : '+ Simular evento'}
     </button>
   );
 }

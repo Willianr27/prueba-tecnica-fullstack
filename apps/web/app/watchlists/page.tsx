@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api-client';
-import { WatchlistForm } from '@/components/WatchlistForm';
 import { WatchlistCard } from '@/components/watchlists/WatchlistCard';
+import { NewWatchlistButton } from '@/components/watchlists/NewWatchlistButton';
 import { StatsBar } from '@/components/dashboard/StatsBar';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -45,37 +45,34 @@ export default async function WatchlistsPage() {
     <div className="space-y-6">
       <StatsBar stats={stats} />
 
-      <div className="grid gap-6 md:grid-cols-[1fr_320px]">
-        <section>
-          <h1 className="mb-4 text-xl font-semibold">Listas de vigilancia</h1>
+      <section>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold">Listas de vigilancia</h1>
+          <NewWatchlistButton />
+        </div>
 
-          {watchlists.length === 0 ? (
-            <EmptyState
-              iconName="radar"
-              title="No hay listas de vigilancia"
-              description="Crea tu primera lista para empezar a monitorear señales en tiempo real."
-              hint="Usa el formulario de la derecha →"
-            />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {watchlists.map((w) => (
-                <WatchlistCard
-                  key={w.id}
-                  id={w.id}
-                  name={w.name}
-                  terms={w.terms}
-                  eventCount={w._count?.events ?? 0}
-                  severityCounts={w.severityCounts ?? {}}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <aside>
-          <WatchlistForm />
-        </aside>
-      </div>
+        {watchlists.length === 0 ? (
+          <EmptyState
+            iconName="radar"
+            title="No hay listas de vigilancia"
+            description="Crea tu primera lista para empezar a monitorear señales en tiempo real."
+            action={<NewWatchlistButton variant="primary" label="+ Crear lista" />}
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {watchlists.map((w) => (
+              <WatchlistCard
+                key={w.id}
+                id={w.id}
+                name={w.name}
+                terms={w.terms}
+                eventCount={w._count?.events ?? 0}
+                severityCounts={w.severityCounts ?? {}}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
