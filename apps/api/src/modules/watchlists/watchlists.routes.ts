@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { CreateWatchlistSchema } from '@signal-watcher/shared';
 import { watchlistsService } from './watchlists.service.js';
 import { eventsService } from '../events/events.service.js';
+import { loadConfig } from '../../core/config.js';
 
 const IdParamSchema = z.object({ id: z.string().min(1) });
 
@@ -16,6 +17,12 @@ export async function watchlistsRoutes(app: FastifyInstance) {
 
   app.get('/api/watchlists', async () => {
     return watchlistsService.list();
+  });
+
+  app.get('/api/stats', async () => {
+    const stats = await watchlistsService.stats();
+    const cfg = loadConfig();
+    return { ...stats, aiProvider: cfg.AI_PROVIDER };
   });
 
   app.get('/api/watchlists/:id', async (req) => {

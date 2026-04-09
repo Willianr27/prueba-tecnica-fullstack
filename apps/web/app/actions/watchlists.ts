@@ -42,7 +42,26 @@ export async function deleteWatchlistAction(id: string): Promise<void> {
   revalidatePath('/watchlists');
 }
 
-export async function simulateEventAction(watchlistId: string): Promise<void> {
-  await apiFetch(`/api/watchlists/${watchlistId}/events/simulate`, { method: 'POST' });
-  revalidatePath(`/watchlists/${watchlistId}`);
+export interface SimulateResult {
+  ok: boolean;
+  severity?: string | null;
+  summary?: string | null;
+  message?: string;
+}
+
+export async function simulateEventAction(watchlistId: string): Promise<SimulateResult> {
+  try {
+    const event = await apiFetch<{ severity: string | null; summary: string | null }>(
+      `/api/watchlists/${watchlistId}/events/simulate`,
+      { method: 'POST' },
+    );
+    revalidatePath(`/watchlists/${watchlistId}`);
+    revalidatePath('/watchlists');
+    return { ok: true, severity: event.severity, summary: event.summary };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof ApiClientError ? err.message : 'No se pudo simular el evento',
+    };
+  }
 }

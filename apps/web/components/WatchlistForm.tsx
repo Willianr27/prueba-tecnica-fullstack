@@ -1,12 +1,25 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { createWatchlistAction, type ActionState } from '@/app/actions/watchlists';
 
 const initialState: ActionState = { ok: false };
 
 export function WatchlistForm() {
   const [state, formAction, pending] = useActionState(createWatchlistAction, initialState);
+  const lastMessageRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (state.message && state.message !== lastMessageRef.current) {
+      lastMessageRef.current = state.message;
+      if (state.ok) {
+        toast.success('Lista creada correctamente');
+      } else {
+        toast.error('No se pudo crear la lista', { description: state.message });
+      }
+    }
+  }, [state]);
 
   return (
     <form action={formAction} className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4">

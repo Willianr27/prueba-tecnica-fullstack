@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Severity } from '@signal-watcher/shared';
 import { ApiClientError, apiFetch } from '@/lib/api-client';
-import { SeverityBadge } from '@/components/SeverityBadge';
 import { SimulateEventButton } from '@/components/SimulateEventButton';
+import { EventCard } from '@/components/events/EventCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface EventRow {
   id: string;
@@ -43,15 +44,18 @@ export default async function WatchlistDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <Link href="/watchlists" className="text-xs text-white/50 hover:text-white">
             ← Volver a las listas
           </Link>
           <h1 className="mt-1 text-2xl font-semibold">{watchlist.name}</h1>
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {watchlist.terms.map((t) => (
-              <span key={t} className="rounded bg-black/30 px-2 py-0.5 text-xs text-white/70">
+              <span
+                key={t}
+                className="rounded-full bg-black/30 px-2 py-0.5 text-[11px] text-white/70"
+              >
                 {t}
               </span>
             ))}
@@ -61,40 +65,32 @@ export default async function WatchlistDetailPage({
       </div>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/60">
           Eventos ({watchlist.events.length})
         </h2>
         {watchlist.events.length === 0 ? (
-          <p className="rounded-md border border-white/10 bg-white/5 p-4 text-sm text-white/60">
-            Aún no hay eventos. Haz clic en <em>Simular evento</em> para generar uno.
-          </p>
+          <EmptyState
+            iconName="inbox"
+            title="Sin eventos aún"
+            description="Simula un evento para ver el enriquecimiento de IA en acción."
+            action={<SimulateEventButton watchlistId={watchlist.id} />}
+          />
         ) : (
-          <ul className="space-y-2">
+          <div className="grid gap-3">
             {watchlist.events.map((e) => (
-              <li key={e.id} className="rounded-md border border-white/10 bg-white/5 p-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <SeverityBadge severity={e.severity} />
-                      <span className="text-xs text-white/50">
-                        {new Date(e.createdAt).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-white/40">
-                        {e.aiProvider ?? 'desconocido'}
-                        {e.aiLatencyMs != null ? ` · ${e.aiLatencyMs}ms` : ''}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm">{e.summary ?? e.rawPayload.description ?? '—'}</p>
-                    {e.suggestedAction && (
-                      <p className="mt-1 text-xs text-cyan-300/90">
-                        → {e.suggestedAction}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </li>
+              <EventCard
+                key={e.id}
+                severity={e.severity}
+                eventType={e.rawPayload.type}
+                createdAt={e.createdAt}
+                summary={e.summary}
+                suggestedAction={e.suggestedAction}
+                provider={e.aiProvider}
+                latencyMs={e.aiLatencyMs}
+                fallbackDescription={e.rawPayload.description}
+              />
             ))}
-          </ul>
+          </div>
         )}
       </section>
     </div>
